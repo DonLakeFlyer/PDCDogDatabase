@@ -12,6 +12,7 @@ Note: This file only contains high level features or important fixes.
 * Make Distance to GCS available for display from instrument panel.
 * Make Heading to Home available for display from instrument panel.
 * Edit Position dialog available on polygon vertices.
+* Survey Planning: add mode that supports concave polygons
 
 ## 3.4
 
