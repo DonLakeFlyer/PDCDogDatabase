@@ -360,15 +360,13 @@ HEADERS += \
     src/api/QGCCorePlugin.h \
     src/api/QGCOptions.h \
     src/api/QGCSettings.h \
-    src/api/QmlComponentInfo.h \
-    src/comm/MavlinkMessagesTimer.h
+    src/api/QmlComponentInfo.h
 
 SOURCES += \
     src/api/QGCCorePlugin.cc \
     src/api/QGCOptions.cc \
     src/api/QGCSettings.cc \
-    src/api/QmlComponentInfo.cc \
-    src/comm/MavlinkMessagesTimer.cc
+    src/api/QmlComponentInfo.cc
 
 # Main QGC Headers and Source files
 
