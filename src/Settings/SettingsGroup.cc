@@ -8,6 +8,7 @@
  ****************************************************************************/
 
 #include "SettingsGroup.h"
+#include "SettingsFact.h"
 #include "QGCCorePlugin.h"
 #include "QGCApplication.h"
 

@@ -13,6 +13,8 @@
 
 #include "QGCQmlWidgetHolder.h"
 
+#include <QQmlContext>
+
 QGCQmlWidgetHolder::QGCQmlWidgetHolder(const QString& title, QAction* action, QWidget *parent) :
     QGCDockWidget(title, action, parent)
 {
@@ -29,11 +31,6 @@ QGCQmlWidgetHolder::QGCQmlWidgetHolder(const QString& title, QAction* action, QW
 QGCQmlWidgetHolder::~QGCQmlWidgetHolder()
 {
 
-}
-
-void QGCQmlWidgetHolder::setAutoPilot(AutoPilotPlugin* autoPilot)
-{
-    setContextPropertyObject("autopilot", autoPilot);
 }
 
 bool QGCQmlWidgetHolder::setSource(const QUrl& qmlUrl)

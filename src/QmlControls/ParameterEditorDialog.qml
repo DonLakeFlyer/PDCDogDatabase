@@ -14,7 +14,6 @@ import QtQuick.Layouts  1.2
 import QGroundControl               1.0
 import QGroundControl.Controls      1.0
 import QGroundControl.Palette       1.0
-import QGroundControl.Controllers   1.0
 import QGroundControl.FactSystem    1.0
 import QGroundControl.FactControls  1.0
 import QGroundControl.ScreenTools   1.0
@@ -36,8 +35,6 @@ QGCViewDialog {
     property bool   _editingParameter:          fact.componentId != 0
     property bool   _allowForceSave:            QGroundControl.corePlugin.showAdvancedUI || !_editingParameter
     property bool   _allowDefaultReset:         fact.defaultValueAvailable && (QGroundControl.corePlugin.showAdvancedUI || !_editingParameter)
-
-    ParameterEditorController { id: controller; factPanel: parent }
 
     QGCPalette { id: qgcPal; colorGroupEnabled: true }
 
@@ -283,13 +280,6 @@ QGCViewDialog {
                 onClicked: {
                     valueField.text = fact.valueString
                 }
-            }
-
-            QGCButton {
-                text:           qsTr("Set RC to Param...")
-                width:          _editFieldWidth
-                visible:        _advanced.checked && !validate && showRCToParam
-                onClicked:      controller.setRCToParam(fact.name)
             }
         } // Column
     }

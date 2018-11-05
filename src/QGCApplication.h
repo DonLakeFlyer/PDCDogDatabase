@@ -22,22 +22,9 @@
 #include <QApplication>
 #include <QTimer>
 #include <QQmlApplicationEngine>
+#include <QTranslator>
 
-#include "LinkConfiguration.h"
-#include "LinkManager.h"
-#include "MAVLinkProtocol.h"
-#include "FlightMapSettings.h"
-#include "FirmwarePluginManager.h"
-#include "MultiVehicleManager.h"
-#include "JoystickManager.h"
-#include "AudioOutput.h"
-#include "UASMessageHandler.h"
 #include "FactSystem.h"
-#include "GPSRTKFactGroup.h"
-
-#ifdef QGC_RTLAB_ENABLED
-#include "OpalLink.h"
-#endif
 
 // Work around circular header includes
 class QGCSingleton;
@@ -96,8 +83,6 @@ public:
     /// Is Internet available?
     bool isInternetAvailable();
 
-    FactGroup* gpsRtkFactGroup(void)  { return _gpsRtkFactGroup; }
-
 public slots:
     /// You can connect to this slot to show an information message box from a different thread.
     void informationMessageBoxOnMainThread(const QString& title, const QString& msg);
@@ -111,17 +96,6 @@ public slots:
     void showSetupView(void);
 
     void qmlAttemptWindowClose(void);
-
-    /// Save the specified telemetry Log
-    void saveTelemetryLogOnMainThread(QString tempLogfile);
-
-    /// Check that the telemetry save path is set correctly
-    void checkTelemetrySavePathOnMainThread(void);
-
-signals:
-    /// This is connected to MAVLinkProtocol::checkForLostLogFiles. We signal this to ourselves to call the slot
-    /// on the MAVLinkProtocol thread;
-    void checkForLostLogFiles(void);
 
 public:
     // Although public, these methods are internal and should only be called by UnitTest code
@@ -148,17 +122,10 @@ public:
     /// Shutdown the application object
     void _shutdown(void);
 
-    bool _checkTelemetrySavePath(bool useMessageBox);
-
 private slots:
-    void _missingParamsDisplay(void);
     void _currentVersionDownloadFinished(QString remoteFile, QString localFile);
     void _currentVersionDownloadError(QString errorMsg);
     bool _parseVersionText(const QString& versionString, int& majorVersion, int& minorVersion, int& buildVersion);
-    void _onGPSConnect();
-    void _onGPSDisconnect();
-    void _gpsSurveyInStatus(float duration, float accuracyMM,  double latitude, double longitude, float altitude, bool valid, bool active);
-    void _gpsNumSatellites(int numSatellites);
 
 private:
     QObject* _rootQmlObject(void);
@@ -173,16 +140,12 @@ private:
 
     static const char*  _darkStyleFile;
     static const char*  _lightStyleFile;
-    static const int    _missingParamsDelayedDisplayTimerTimeout = 1000;    ///< Timeout to wait for next missing fact to come in before display
-    QTimer              _missingParamsDelayedDisplayTimer;                  ///< Timer use to delay missing fact display
-    QStringList         _missingParams;                                     ///< List of missing facts to be displayed
     bool				_fakeMobile;                                        ///< true: Fake ui into displaying mobile interface
     bool                _settingsUpgraded;                                  ///< true: Settings format has been upgrade to new version
     int                 _majorVersion;
     int                 _minorVersion;
     int                 _buildVersion;
     QGCFileDownload*    _currentVersionDownload;
-    GPSRTKFactGroup*    _gpsRtkFactGroup;
 
     QGCToolbox* _toolbox;
 

@@ -17,8 +17,6 @@
 #include <QObject>
 #include <QList>
 
-#include "AutoPilotPlugin.h"
-#include "UASInterface.h"
 #include "FactPanelController.h"
 #include "QmlObjectListModel.h"
 

@@ -75,10 +75,3 @@ void EditPositionDialogController::setFromUTM(void)
     qDebug() << _eastingFact.rawValue().toDouble() << _northingFact.rawValue().toDouble() << _zoneFact.rawValue().toInt() << (_hemisphereFact.rawValue().toInt() == 1) << _coordinate;
     emit coordinateChanged(_coordinate);
 }
-
-void EditPositionDialogController::setFromVehicle(void)
-{
-    _coordinate = qgcApp()->toolbox()->multiVehicleManager()->activeVehicle()->coordinate();
-    emit coordinateChanged(_coordinate);
-}
-

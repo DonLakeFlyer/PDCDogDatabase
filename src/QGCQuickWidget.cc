@@ -9,8 +9,6 @@
 
 
 #include "QGCQuickWidget.h"
-#include "MultiVehicleManager.h"
-#include "JoystickManager.h"
 #include "QGCApplication.h"
 
 #include <QQmlContext>
@@ -32,12 +30,6 @@ QGCQuickWidget::QGCQuickWidget(QWidget* parent) :
     setAttribute(Qt::WA_AcceptTouchEvents);
 #endif
     rootContext()->engine()->addImportPath("qrc:/qml");
-    rootContext()->setContextProperty("joystickManager", qgcApp()->toolbox()->joystickManager());
-}
-
-void QGCQuickWidget::setAutoPilot(AutoPilotPlugin* autoPilot)
-{
-    rootContext()->setContextProperty("autopilot", autoPilot);
 }
 
 bool QGCQuickWidget::setSource(const QUrl& qmlUrl)

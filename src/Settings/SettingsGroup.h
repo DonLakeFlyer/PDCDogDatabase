@@ -11,9 +11,8 @@
 #define SettingsGroup_H
 
 #include "QGCLoggingCategory.h"
-#include "Joystick.h"
-#include "MultiVehicleManager.h"
 #include "QGCToolbox.h"
+#include "SettingsFact.h"
 
 #include <QVariantList>
 

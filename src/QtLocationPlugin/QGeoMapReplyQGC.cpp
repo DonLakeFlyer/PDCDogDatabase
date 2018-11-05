@@ -51,7 +51,6 @@
 #include <QtLocation/private/qgeotilespec_p.h>
 #include <QtNetwork/QNetworkAccessManager>
 #include <QFile>
-#include "TerrainTile.h"
 
 int QGeoTiledMapReplyQGC::_requestCount = 0;
 
@@ -125,12 +124,14 @@ QGeoTiledMapReplyQGC::networkReplyFinished()
     QString format = getQGCMapEngine()->urlFactory()->getImageFormat((UrlFactory::MapType)tileSpec().mapId(), a);
     //-- Test for a specialized, elevation data (not map tile)
     if ((UrlFactory::MapType)tileSpec().mapId() == UrlFactory::MapType::AirmapElevation) {
+#if 0
         a = TerrainTile::serialize(a);
         //-- Cache it if valid
         if(!a.isEmpty()) {
             getQGCMapEngine()->cacheTile(UrlFactory::MapType::AirmapElevation, tileSpec().x(), tileSpec().y(), tileSpec().zoom(), a, format);
         }
         emit terrainDone(a, QNetworkReply::NoError);
+#endif
     } else {
         //-- This is a map tile. Process and cache it if valid.
         setMapImageData(a);

@@ -25,6 +25,7 @@
 #include <QAction>
 #include <QStringListModel>
 #include <QRegularExpression>
+#include <QSettings>
 
 #ifdef QGC_ENABLE_BLUETOOTH
 #include <QBluetoothLocalDevice>
@@ -32,80 +33,32 @@
 
 #include <QDebug>
 
-#include "VideoStreaming.h"
-
 #include "QGC.h"
 #include "QGCApplication.h"
-#include "AudioOutput.h"
 #include "CmdLineOptParser.h"
-#include "UDPLink.h"
-#include "LinkManager.h"
-#include "UASMessageHandler.h"
 #include "QGCTemporaryFile.h"
 #include "QGCPalette.h"
 #include "QGCMapPalette.h"
 #include "QGCLoggingCategory.h"
-#include "ViewWidgetController.h"
-#include "ParameterEditorController.h"
-#include "CustomCommandWidgetController.h"
-#include "ESP8266ComponentController.h"
 #include "ScreenToolsController.h"
 #include "QGCFileDialogController.h"
-#include "RCChannelMonitorController.h"
-#include "SyslinkComponentController.h"
-#include "AutoPilotPlugin.h"
-#include "VehicleComponent.h"
-#include "FirmwarePluginManager.h"
-#include "MultiVehicleManager.h"
-#include "Vehicle.h"
-#include "JoystickConfigController.h"
-#include "JoystickManager.h"
 #include "QmlObjectListModel.h"
 #include "QGCGeoBoundingCube.h"
-#include "MissionManager.h"
 #include "QGroundControlQmlGlobal.h"
-#include "FlightMapSettings.h"
 #include "CoordinateVector.h"
-#include "PlanMasterController.h"
-#include "VideoManager.h"
-#include "VideoSurface.h"
-#include "VideoReceiver.h"
-#include "LogDownloadController.h"
-#include "ValuesWidgetController.h"
 #include "AppMessages.h"
 #include "SimulatedPosition.h"
 #include "PositionManager.h"
-#include "FollowMe.h"
-#include "MissionCommandTree.h"
-#include "QGCMapPolygon.h"
-#include "QGCMapCircle.h"
-#include "ParameterManager.h"
 #include "SettingsManager.h"
 #include "QGCCorePlugin.h"
-#include "QGCCameraManager.h"
-#include "CameraCalc.h"
-#include "VisualMissionItem.h"
 #include "EditPositionDialogController.h"
 #include "FactValueSliderListModel.h"
-#include "KMLFileHelper.h"
 #include "QGCFileDownload.h"
-
-#ifndef NO_SERIAL_LINK
-#include "SerialLink.h"
-#endif
 
 #ifndef __mobile__
 #include "QGCQFileDialog.h"
 #include "QGCMessageBox.h"
-#include "FirmwareUpgradeController.h"
 #include "MainWindow.h"
-#include "GeoTagController.h"
-#include "MavlinkConsoleController.h"
-#include "GPS/GPSManager.h"
-#endif
-
-#ifdef QGC_RTLAB_ENABLED
-#include "OpalLink.h"
 #endif
 
 #ifdef Q_OS_LINUX
@@ -125,9 +78,6 @@ const char* QGCApplication::_settingsVersionKey             = "SettingsVersion";
 const char* QGCApplication::_darkStyleFile          = ":/res/styles/style-dark.css";
 const char* QGCApplication::_lightStyleFile         = ":/res/styles/style-light.css";
 
-// Mavlink status structures for entire app
-mavlink_status_t m_mavlink_status[MAVLINK_COMM_NUM_BUFFERS];
-
 // Qml Singleton factories
 
 static QObject* screenToolsControllerSingletonFactory(QQmlEngine*, QJSEngine*)
@@ -145,11 +95,6 @@ static QObject* qgroundcontrolQmlGlobalSingletonFactory(QQmlEngine*, QJSEngine*)
     return qmlGlobal;
 }
 
-static QObject* kmlFileHelperSingletonFactory(QQmlEngine*, QJSEngine*)
-{
-    return new KMLFileHelper;
-}
-
 QGCApplication::QGCApplication(int &argc, char* argv[], bool unitTesting)
 #ifdef __mobile__
     : QGuiApplication           (argc, argv)
@@ -165,7 +110,6 @@ QGCApplication::QGCApplication(int &argc, char* argv[], bool unitTesting)
     , _minorVersion             (0)
     , _buildVersion             (0)
     , _currentVersionDownload   (nullptr)
-    , _gpsRtkFactGroup          (nullptr)
     , _toolbox                  (nullptr)
     , _bluetoothAvailable       (false)
 {
@@ -249,11 +193,6 @@ QGCApplication::QGCApplication(int &argc, char* argv[], bool unitTesting)
 
     ParseCmdLineOptions(argc, argv, rgCmdLineOptions, sizeof(rgCmdLineOptions)/sizeof(rgCmdLineOptions[0]), false);
 
-    // Set up timer for delayed missing fact display
-    _missingParamsDelayedDisplayTimer.setSingleShot(true);
-    _missingParamsDelayedDisplayTimer.setInterval(_missingParamsDelayedDisplayTimerTimeout);
-    connect(&_missingParamsDelayedDisplayTimer, &QTimer::timeout, this, &QGCApplication::_missingParamsDisplay);
-
     // Set application information
     if (_runningUnitTests) {
         // We don't want unit tests to use the same QSettings space as the normal app. So we tweak the app
@@ -288,11 +227,6 @@ QGCApplication::QGCApplication(int &argc, char* argv[], bool unitTesting)
     if (fClearSettingsOptions) {
         // User requested settings to be cleared on command line
         settings.clear();
-
-        // Clear parameter cache
-        QDir paramDir(ParameterManager::parameterCacheDir());
-        paramDir.removeRecursively();
-        paramDir.mkpath(paramDir.absolutePath());
     } else {
         // Determine if upgrade message for settings version bump is required. Check and clear must happen before toolbox is started since
         // that will write some settings.
@@ -312,43 +246,8 @@ QGCApplication::QGCApplication(int &argc, char* argv[], bool unitTesting)
     // Set up our logging filters
     QGCLoggingCategoryRegister::instance()->setFilterRulesFromSettings(loggingOptions);
 
-    // Initialize Bluetooth
-#ifdef QGC_ENABLE_BLUETOOTH
-    QBluetoothLocalDevice localDevice;
-    if (localDevice.isValid())
-    {
-        _bluetoothAvailable = true;
-    }
-#endif
-
-    // gstreamer debug settings
-    QString savePath, gstDebugLevel;
-    if (settings.contains(AppSettings::savePathName)) {
-         savePath = settings.value("SavePath").toString() + "/Logs/gst"; // hardcode log path here, appsetting is not available yet
-         if (!QDir(savePath).exists()) {
-             QDir().mkdir(savePath);
-         }
-    }
-    if (settings.contains(AppSettings::gstDebugName)) {
-        gstDebugLevel = "*:" + settings.value("GstreamerDebugLevel").toString();
-    }
-
-    // Initialize Video Streaming
-    initializeVideoStreaming(argc, argv, savePath.toUtf8().data(), gstDebugLevel.toUtf8().data());
-
     _toolbox = new QGCToolbox(this);
     _toolbox->setChildToolboxes();
-
-#ifndef __mobile__
-    _gpsRtkFactGroup = new GPSRTKFactGroup(this);
-   GPSManager *gpsManager = _toolbox->gpsManager();
-   if (gpsManager) {
-       connect(gpsManager, &GPSManager::onConnect,          this, &QGCApplication::_onGPSConnect);
-       connect(gpsManager, &GPSManager::onDisconnect,       this, &QGCApplication::_onGPSDisconnect);
-       connect(gpsManager, &GPSManager::surveyInStatus,     this, &QGCApplication::_gpsSurveyInStatus);
-       connect(gpsManager, &GPSManager::satelliteUpdate,    this, &QGCApplication::_gpsNumSatellites);
-   }
-#endif /* __mobile__ */
 
     _checkForNewVersion();
 }
@@ -365,7 +264,6 @@ void QGCApplication::_shutdown(void)
         delete mainWindow;
     }
 #endif
-    shutdownVideoStreaming();
     delete _toolbox;
 }
 
@@ -379,7 +277,6 @@ void QGCApplication::_initCommon(void)
 {
     static const char* kRefOnly         = "Reference only";
     static const char* kQGCControllers  = "QGroundControl.Controllers";
-    static const char* kQGCVehicle      = "QGroundControl.Vehicle";
 
     QSettings settings;
 
@@ -388,59 +285,21 @@ void QGCApplication::_initCommon(void)
     qmlRegisterType<QGCPalette>     ("QGroundControl.Palette", 1, 0, "QGCPalette");
     qmlRegisterType<QGCMapPalette>  ("QGroundControl.Palette", 1, 0, "QGCMapPalette");
 
-    qmlRegisterUncreatableType<Vehicle>             (kQGCVehicle,                           1, 0, "Vehicle",                    kRefOnly);
-    qmlRegisterUncreatableType<MissionItem>         (kQGCVehicle,                           1, 0, "MissionItem",                kRefOnly);
-    qmlRegisterUncreatableType<MissionManager>      (kQGCVehicle,                           1, 0, "MissionManager",             kRefOnly);
-    qmlRegisterUncreatableType<ParameterManager>    (kQGCVehicle,                           1, 0, "ParameterManager",           kRefOnly);
-    qmlRegisterUncreatableType<QGCCameraManager>    (kQGCVehicle,                           1, 0, "QGCCameraManager",           kRefOnly);
-    qmlRegisterUncreatableType<QGCCameraControl>    (kQGCVehicle,                           1, 0, "QGCCameraControl",           kRefOnly);
-    qmlRegisterUncreatableType<LinkInterface>       (kQGCVehicle,                           1, 0, "LinkInterface",              kRefOnly);
-    qmlRegisterUncreatableType<MissionController>   (kQGCControllers,                       1, 0, "MissionController",          kRefOnly);
-    qmlRegisterUncreatableType<GeoFenceController>  (kQGCControllers,                       1, 0, "GeoFenceController",         kRefOnly);
-    qmlRegisterUncreatableType<RallyPointController>(kQGCControllers,                       1, 0, "RallyPointController",       kRefOnly);
-    qmlRegisterUncreatableType<VisualMissionItem>   (kQGCControllers,                       1, 0, "VisualMissionItem",          kRefOnly);
-
     qmlRegisterUncreatableType<CoordinateVector>    ("QGroundControl",                      1, 0, "CoordinateVector",           kRefOnly);
     qmlRegisterUncreatableType<QmlObjectListModel>  ("QGroundControl",                      1, 0, "QmlObjectListModel",         kRefOnly);
-    qmlRegisterUncreatableType<MissionCommandTree>  ("QGroundControl",                      1, 0, "MissionCommandTree",         kRefOnly);
-    qmlRegisterUncreatableType<CameraCalc>          ("QGroundControl",                      1, 0, "CameraCalc",                 kRefOnly);
 
-    qmlRegisterUncreatableType<AutoPilotPlugin>     ("QGroundControl.AutoPilotPlugin",      1, 0, "AutoPilotPlugin",            kRefOnly);
-    qmlRegisterUncreatableType<VehicleComponent>    ("QGroundControl.AutoPilotPlugin",      1, 0, "VehicleComponent",           kRefOnly);
-    qmlRegisterUncreatableType<JoystickManager>     ("QGroundControl.JoystickManager",      1, 0, "JoystickManager",            kRefOnly);
-    qmlRegisterUncreatableType<Joystick>            ("QGroundControl.JoystickManager",      1, 0, "Joystick",                   kRefOnly);
     qmlRegisterUncreatableType<QGCPositionManager>  ("QGroundControl.QGCPositionManager",   1, 0, "QGCPositionManager",         kRefOnly);
     qmlRegisterUncreatableType<FactValueSliderListModel>("QGroundControl.FactControls",     1, 0, "FactValueSliderListModel",   kRefOnly);
 
-    qmlRegisterUncreatableType<QGCMapPolygon>       ("QGroundControl.FlightMap",            1, 0, "QGCMapPolygon",              kRefOnly);
     qmlRegisterUncreatableType<QGCGeoBoundingCube>  ("QGroundControl.FlightMap",            1, 0, "QGCGeoBoundingCube",         kRefOnly);
 
-    qmlRegisterType<QGCMapCircle>                   ("QGroundControl.FlightMap",            1, 0, "QGCMapCircle");
-
-    qmlRegisterType<ParameterEditorController>      (kQGCControllers,                       1, 0, "ParameterEditorController");
-    qmlRegisterType<ESP8266ComponentController>     (kQGCControllers,                       1, 0, "ESP8266ComponentController");
     qmlRegisterType<ScreenToolsController>          (kQGCControllers,                       1, 0, "ScreenToolsController");
-    qmlRegisterType<PlanMasterController>           (kQGCControllers,                       1, 0, "PlanMasterController");
-    qmlRegisterType<ValuesWidgetController>         (kQGCControllers,                       1, 0, "ValuesWidgetController");
     qmlRegisterType<QGCFileDialogController>        (kQGCControllers,                       1, 0, "QGCFileDialogController");
-    qmlRegisterType<RCChannelMonitorController>     (kQGCControllers,                       1, 0, "RCChannelMonitorController");
-    qmlRegisterType<JoystickConfigController>       (kQGCControllers,                       1, 0, "JoystickConfigController");
-    qmlRegisterType<LogDownloadController>          (kQGCControllers,                       1, 0, "LogDownloadController");
-    qmlRegisterType<SyslinkComponentController>     (kQGCControllers,                       1, 0, "SyslinkComponentController");
     qmlRegisterType<EditPositionDialogController>   (kQGCControllers,                       1, 0, "EditPositionDialogController");
-
-#ifndef __mobile__
-    qmlRegisterType<ViewWidgetController>           (kQGCControllers,                       1, 0, "ViewWidgetController");
-    qmlRegisterType<CustomCommandWidgetController>  (kQGCControllers,                       1, 0, "CustomCommandWidgetController");
-    qmlRegisterType<FirmwareUpgradeController>      (kQGCControllers,                       1, 0, "FirmwareUpgradeController");
-    qmlRegisterType<GeoTagController>               (kQGCControllers,                       1, 0, "GeoTagController");
-    qmlRegisterType<MavlinkConsoleController>       (kQGCControllers,                       1, 0, "MavlinkConsoleController");
-#endif
 
     // Register Qml Singletons
     qmlRegisterSingletonType<QGroundControlQmlGlobal>   ("QGroundControl",                          1, 0, "QGroundControl",         qgroundcontrolQmlGlobalSingletonFactory);
     qmlRegisterSingletonType<ScreenToolsController>     ("QGroundControl.ScreenToolsController",    1, 0, "ScreenToolsController",  screenToolsControllerSingletonFactory);
-    qmlRegisterSingletonType<KMLFileHelper>             ("QGroundControl.KMLFileHelper",            1, 0, "KMLFileHelper",          kmlFileHelperSingletonFactory);
 }
 
 bool QGCApplication::_initForNormalAppBoot(void)
@@ -460,23 +319,10 @@ bool QGCApplication::_initForNormalAppBoot(void)
     Q_CHECK_PTR(mainWindow);
 #endif
 
-    // Now that main window is up check for lost log files
-    connect(this, &QGCApplication::checkForLostLogFiles, toolbox()->mavlinkProtocol(), &MAVLinkProtocol::checkForLostLogFiles);
-    emit checkForLostLogFiles();
-
-    // Load known link configurations
-    toolbox()->linkManager()->loadLinkConfigurationList();
-
-    // Probe for joysticks
-    toolbox()->joystickManager()->init();
-
     if (_settingsUpgraded) {
         showMessage(tr("The format for QGroundControl saved settings has been modified. "
                     "Your saved settings have been reset to defaults."));
     }
-
-    // Connect links with flag AutoconnectLink
-    toolbox()->linkManager()->startAutoConnectedLinks();
 
     if (getQGCMapEngine()->wasCacheReset()) {
         showMessage(tr("The Offline Map Cache database has been upgraded. "
@@ -536,83 +382,6 @@ void QGCApplication::criticalMessageBoxOnMainThread(const QString& title, const 
 #endif
 }
 
-void QGCApplication::saveTelemetryLogOnMainThread(QString tempLogfile)
-{
-    // The vehicle is gone now and we are shutting down so we need to use a message box for errors to hold shutdown and show the error
-    if (_checkTelemetrySavePath(true /* useMessageBox */)) {
-
-        QString saveDirPath = _toolbox->settingsManager()->appSettings()->telemetrySavePath();
-        QDir saveDir(saveDirPath);
-
-        QString nameFormat("%1%2.%3");
-        QString dtFormat("yyyy-MM-dd hh-mm-ss");
-
-        int tryIndex = 1;
-        QString saveFileName = nameFormat.arg(
-            QDateTime::currentDateTime().toString(dtFormat)).arg("").arg(toolbox()->settingsManager()->appSettings()->telemetryFileExtension);
-        while (saveDir.exists(saveFileName)) {
-            saveFileName = nameFormat.arg(
-                QDateTime::currentDateTime().toString(dtFormat)).arg(QStringLiteral(".%1").arg(tryIndex++)).arg(toolbox()->settingsManager()->appSettings()->telemetryFileExtension);
-        }
-        QString saveFilePath = saveDir.absoluteFilePath(saveFileName);
-
-        QFile tempFile(tempLogfile);
-        if (!tempFile.copy(saveFilePath)) {
-            QString error = tr("Unable to save telemetry log. Error copying telemetry to '%1': '%2'.").arg(saveFilePath).arg(tempFile.errorString());
-#ifndef __mobile__
-            QGCMessageBox::warning(tr("Telemetry Save Error"), error);
-#else
-            showMessage(error);
-#endif
-        }
-    }
-    QFile::remove(tempLogfile);
-}
-
-void QGCApplication::checkTelemetrySavePathOnMainThread(void)
-{
-    // This is called with an active vehicle so don't pop message boxes which holds ui thread
-    _checkTelemetrySavePath(false /* useMessageBox */);
-}
-
-bool QGCApplication::_checkTelemetrySavePath(bool useMessageBox)
-{
-    QString errorTitle = tr("Telemetry save error");
-
-    QString saveDirPath = _toolbox->settingsManager()->appSettings()->telemetrySavePath();
-    if (saveDirPath.isEmpty()) {
-        QString error = tr("Unable to save telemetry log. Application save directory is not set.");
-#ifndef __mobile__
-        if (useMessageBox) {
-            QGCMessageBox::warning(errorTitle, error);
-        } else {
-#endif
-            Q_UNUSED(useMessageBox);
-            showMessage(error);
-#ifndef __mobile__
-        }
-#endif
-        return false;
-    }
-
-    QDir saveDir(saveDirPath);
-    if (!saveDir.exists()) {
-        QString error = tr("Unable to save telemetry log. Telemetry save directory \"%1\" does not exist.").arg(saveDirPath);
-#ifndef __mobile__
-        if (useMessageBox) {
-            QGCMessageBox::warning(errorTitle, error);
-        } else {
-#endif
-            showMessage(error);
-#ifndef __mobile__
-        }
-#endif
-        return false;
-    }
-
-    return true;
-}
-
 void QGCApplication::_loadCurrentStyleSheet(void)
 {
 #ifndef __mobile__
@@ -647,30 +416,6 @@ void QGCApplication::_loadCurrentStyleSheet(void)
         setStyle("plastique");
     }
 #endif
-}
-
-void QGCApplication::reportMissingParameter(int componentId, const QString& name)
-{
-    _missingParams += QString("%1:%2").arg(componentId).arg(name);
-    _missingParamsDelayedDisplayTimer.start();
-}
-
-/// Called when the delay timer fires to show the missing parameters warning
-void QGCApplication::_missingParamsDisplay(void)
-{
-    if (_missingParams.count()) {
-        QString params;
-        foreach (const QString &name, _missingParams) {
-            if (params.isEmpty()) {
-                params += name;
-            } else {
-                params += QString(", %1").arg(name);
-            }
-        }
-        _missingParams.clear();
-
-        showMessage(tr("Parameters are missing from firmware. You may be running a version of firmware QGC does not work correctly with or your firmware has a bug in it. Missing params: %1").arg(params));
-    }
 }
 
 QObject* QGCApplication::_rootQmlObject()
@@ -801,31 +546,3 @@ bool QGCApplication::_parseVersionText(const QString& versionString, int& majorV
 
     return false;
 }
-
-
-void QGCApplication::_onGPSConnect()
-{
-    _gpsRtkFactGroup->connected()->setRawValue(true);
-}
-
-void QGCApplication::_onGPSDisconnect()
-{
-    _gpsRtkFactGroup->connected()->setRawValue(false);
-}
-
-void QGCApplication::_gpsSurveyInStatus(float duration, float accuracyMM,  double latitude, double longitude, float altitude, bool valid, bool active)
-{
-    _gpsRtkFactGroup->currentDuration()->setRawValue(duration);
-    _gpsRtkFactGroup->currentAccuracy()->setRawValue(accuracyMM/1000.0);
-    _gpsRtkFactGroup->currentLatitude()->setRawValue(latitude);
-    _gpsRtkFactGroup->currentLongitude()->setRawValue(longitude);
-    _gpsRtkFactGroup->currentAltitude()->setRawValue(altitude);
-    _gpsRtkFactGroup->valid()->setRawValue(valid);
-    _gpsRtkFactGroup->active()->setRawValue(active);
-}
-
-void QGCApplication::_gpsNumSatellites(int numSatellites)
-{
-    _gpsRtkFactGroup->numSatellites()->setRawValue(numSatellites);
-}
-

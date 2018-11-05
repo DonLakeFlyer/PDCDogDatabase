@@ -15,7 +15,6 @@
 ///     @author Don Gagne <don@thegagnes.com>
 
 #include "QGCDockWidget.h"
-#include "AutoPilotPlugin.h"
 
 #include "ui_QGCQmlWidgetHolder.h"
 
@@ -36,9 +35,6 @@ public:
     //      action = NULL
     explicit QGCQmlWidgetHolder(const QString& title, QAction* action, QWidget *parent = 0);
     ~QGCQmlWidgetHolder();
-
-    /// Sets the UAS into the widget which in turn will load facts into the context
-    void setAutoPilot(AutoPilotPlugin* autoPilot);
 
     /// Get Root Context
     QQmlContext* getRootContext(void);

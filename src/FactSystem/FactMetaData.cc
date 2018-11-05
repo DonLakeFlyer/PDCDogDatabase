@@ -16,6 +16,7 @@
 #include <QtMath>
 #include <QJsonParseError>
 #include <QJsonArray>
+#include <QFile>
 
 #include <limits>
 #include <cmath>
@@ -865,7 +866,7 @@ size_t FactMetaData::typeToSize(ValueType_t type)
         return 8;
 
     case valueTypeCustom:
-        return MAVLINK_MSG_PARAM_EXT_SET_FIELD_PARAM_VALUE_LEN;
+        return 256;
 
     default:
         qWarning() << "Unsupported fact value type" << type;

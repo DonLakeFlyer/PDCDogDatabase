@@ -156,24 +156,6 @@ QGCView {
                 text:            qsTr("Save App Log")
             }
 
-            QGCLabel {
-                id:                  gstLabel
-                anchors.baseline:    gstCombo.baseline
-                anchors.right:       gstCombo.left
-                anchors.rightMargin: ScreenTools.defaultFontPixelWidth
-                text:                "gstreamer debug level:"
-            }
-
-            FactComboBox {
-                id:                  gstCombo
-                anchors.right:       followTail.left
-                anchors.rightMargin: ScreenTools.defaultFontPixelWidth*20
-                anchors.bottom:      parent.bottom
-                width:               ScreenTools.defaultFontPixelWidth*20
-                model:               ["disabled", "1", "2", "3", "4", "5", "6", "7", "8"]
-                fact:                QGroundControl.settingsManager.appSettings.gstDebug
-            }
-
             BusyIndicator {
                 id:              writeBusy
                 anchors.bottom:  writeButton.bottom

@@ -216,7 +216,7 @@ QGCView {
     QGCFileDialog {
         id:             fileDialog
         qgcView:        offlineMapView
-        folder:         QGroundControl.settingsManager.appSettings.missionSavePath
+        folder:         QGroundControl.settingsManager.appSettings.logSavePath
         nameFilters:    ["Tile Sets (*.qgctiledb)"]
         fileExtension:  "qgctiledb"
 
@@ -375,7 +375,6 @@ QGCView {
             anchors.fill:               parent
             visible:                    false
             allowGCSLocationCenter:     true
-            allowVehicleLocationCenter: false
             gesture.flickDeceleration:  3000
             mapName:                    "OfflineMap"
             qgcView:                    offlineMapView

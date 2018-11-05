@@ -15,7 +15,6 @@
 #include "SettingsManager.h"
 #include "AppMessages.h"
 #include "QmlObjectListModel.h"
-#include "VideoReceiver.h"
 #include "QGCLoggingCategory.h"
 
 #include <QtQml>
@@ -30,18 +29,8 @@ class QGCCorePlugin_p
 public:
     QGCCorePlugin_p()
         : pGeneral                  (nullptr)
-        , pCommLinks                (nullptr)
         , pOfflineMaps              (nullptr)
-    #if defined(QGC_AIRMAP_ENABLED)
-        , pAirmap                   (nullptr)
-    #endif
-        , pMAVLink                  (nullptr)
         , pConsole                  (nullptr)
-        , pHelp                     (nullptr)
-    #if defined(QT_DEBUG)
-        , pMockLink                 (nullptr)
-        , pDebug                    (nullptr)
-    #endif
         , defaultOptions            (nullptr)
         , valuesPageWidgetInfo      (nullptr)
         , cameraPageWidgetInfo      (nullptr)
@@ -55,41 +44,17 @@ public:
     {
         if(pGeneral)
             delete pGeneral;
-        if(pCommLinks)
-            delete pCommLinks;
         if(pOfflineMaps)
             delete pOfflineMaps;
-#if defined(QGC_AIRMAP_ENABLED)
-        if(pAirmap)
-            delete pAirmap;
-#endif
-        if(pMAVLink)
-            delete pMAVLink;
         if(pConsole)
             delete pConsole;
-#if defined(QT_DEBUG)
-        if(pMockLink)
-            delete pMockLink;
-        if(pDebug)
-            delete pDebug;
-#endif
         if(defaultOptions)
             delete defaultOptions;
     }
 
     QmlComponentInfo* pGeneral;
-    QmlComponentInfo* pCommLinks;
     QmlComponentInfo* pOfflineMaps;
-#if defined(QGC_AIRMAP_ENABLED)
-    QmlComponentInfo* pAirmap;
-#endif
-    QmlComponentInfo* pMAVLink;
     QmlComponentInfo* pConsole;
-    QmlComponentInfo* pHelp;
-#if defined(QT_DEBUG)
-    QmlComponentInfo* pMockLink;
-    QmlComponentInfo* pDebug;
-#endif
     QVariantList settingsList;
     QGCOptions*  defaultOptions;
 
@@ -133,39 +98,13 @@ QVariantList &QGCCorePlugin::settingsPages()
             QUrl::fromUserInput("qrc:/qml/GeneralSettings.qml"),
             QUrl::fromUserInput("qrc:/res/gear-white.svg"));
         _p->settingsList.append(QVariant::fromValue(reinterpret_cast<QmlComponentInfo*>(_p->pGeneral)));
-        _p->pCommLinks = new QmlComponentInfo(tr("Comm Links"),
-            QUrl::fromUserInput("qrc:/qml/LinkSettings.qml"),
-            QUrl::fromUserInput("qrc:/res/waves.svg"));
-        _p->settingsList.append(QVariant::fromValue(reinterpret_cast<QmlComponentInfo*>(_p->pCommLinks)));
         _p->pOfflineMaps = new QmlComponentInfo(tr("Offline Maps"),
             QUrl::fromUserInput("qrc:/qml/OfflineMap.qml"),
             QUrl::fromUserInput("qrc:/res/waves.svg"));
         _p->settingsList.append(QVariant::fromValue(reinterpret_cast<QmlComponentInfo*>(_p->pOfflineMaps)));
-#if defined(QGC_AIRMAP_ENABLED)
-        _p->pAirmap = new QmlComponentInfo(tr("AirMap"),
-            QUrl::fromUserInput("qrc:/qml/AirmapSettings.qml"),
-            QUrl::fromUserInput(""));
-        _p->settingsList.append(QVariant::fromValue(reinterpret_cast<QmlComponentInfo*>(_p->pAirmap)));
-#endif
-        _p->pMAVLink = new QmlComponentInfo(tr("MAVLink"),
-            QUrl::fromUserInput("qrc:/qml/MavlinkSettings.qml"),
-            QUrl::fromUserInput("qrc:/res/waves.svg"));
-        _p->settingsList.append(QVariant::fromValue(reinterpret_cast<QmlComponentInfo*>(_p->pMAVLink)));
         _p->pConsole = new QmlComponentInfo(tr("Console"),
             QUrl::fromUserInput("qrc:/qml/QGroundControl/Controls/AppMessages.qml"));
         _p->settingsList.append(QVariant::fromValue(reinterpret_cast<QmlComponentInfo*>(_p->pConsole)));
-        _p->pHelp = new QmlComponentInfo(tr("Help"),
-            QUrl::fromUserInput("qrc:/qml/HelpSettings.qml"));
-        _p->settingsList.append(QVariant::fromValue(reinterpret_cast<QmlComponentInfo*>(_p->pHelp)));
-#if defined(QT_DEBUG)
-        //-- These are always present on Debug builds
-        _p->pMockLink = new QmlComponentInfo(tr("Mock Link"),
-            QUrl::fromUserInput("qrc:/qml/MockLink.qml"));
-        _p->settingsList.append(QVariant::fromValue(reinterpret_cast<QmlComponentInfo*>(_p->pMockLink)));
-        _p->pDebug = new QmlComponentInfo(tr("Debug"),
-            QUrl::fromUserInput("qrc:/qml/DebugWindow.qml"));
-        _p->settingsList.append(QVariant::fromValue(reinterpret_cast<QmlComponentInfo*>(_p->pDebug)));
-#endif
     }
     return _p->settingsList;
 }
@@ -230,15 +169,6 @@ bool QGCCorePlugin::adjustSettingMetaData(const QString& settingsGroup, FactMeta
 #endif
         metaData.setRawDefaultValue(outdoorPalette);
         return true;
-    //-- Auto Save Telemetry Logs
-    } else if (metaData.name() == AppSettings::telemetrySaveName) {
-#if defined (__mobile__)
-        metaData.setRawDefaultValue(false);
-        return true;
-#else
-        metaData.setRawDefaultValue(true);
-        return true;
-#endif
 #if defined(__ios__)
     } else if (metaData.name() == AppSettings::savePathName) {
         QString appName = qgcApp()->applicationName();
@@ -290,34 +220,14 @@ QQmlApplicationEngine* QGCCorePlugin::createRootWindow(QObject *parent)
 {
     QQmlApplicationEngine* pEngine = new QQmlApplicationEngine(parent);
     pEngine->addImportPath("qrc:/qml");
-    pEngine->rootContext()->setContextProperty("joystickManager", qgcApp()->toolbox()->joystickManager());
     pEngine->rootContext()->setContextProperty("debugMessageModel", AppMessages::getModel());
     pEngine->load(QUrl(QStringLiteral("qrc:/qml/MainWindowNative.qml")));
     return pEngine;
 }
 
-bool QGCCorePlugin::mavlinkMessage(Vehicle* vehicle, LinkInterface* link, mavlink_message_t message)
-{
-    Q_UNUSED(vehicle);
-    Q_UNUSED(link);
-    Q_UNUSED(message);
-
-    return true;
-}
-
 QmlObjectListModel* QGCCorePlugin::customMapItems(void)
 {
     return &_p->_emptyCustomMapItems;
-}
-
-VideoReceiver* QGCCorePlugin::createVideoReceiver(QObject* parent)
-{
-    return new VideoReceiver(parent);
-}
-
-bool QGCCorePlugin::guidedActionsControllerLogging(void) const
-{
-    return GuidedActionsControllerLog().isDebugEnabled();
 }
 
 QString QGCCorePlugin::stableVersionCheckFileUrl(void) const

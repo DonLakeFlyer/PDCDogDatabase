@@ -13,8 +13,6 @@
 
 #include <QQuickWidget>
 
-#include "AutoPilotPlugin.h"
-
 /// @file
 ///     @brief Subclass of QQuickWidget which injects Facts and the Palette object into
 ///             the QML context.
@@ -26,9 +24,6 @@ class QGCQuickWidget : public QQuickWidget {
     
 public:
     QGCQuickWidget(QWidget* parent = NULL);
-    
-    /// Sets the UAS into the widget which in turn will load facts into the context
-    void setAutoPilot(AutoPilotPlugin* autoPilot);
     
     /// Sets the QML into the control. Will display errors message box if error occurs loading source.
     ///     @return true: source loaded, false: source not loaded, errors occurred

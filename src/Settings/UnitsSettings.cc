@@ -8,6 +8,7 @@
  ****************************************************************************/
 
 #include "UnitsSettings.h"
+#include "FactMetaData.h"
 
 #include <QQmlEngine>
 #include <QtQml>

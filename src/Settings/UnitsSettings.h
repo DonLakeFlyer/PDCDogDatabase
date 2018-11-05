@@ -12,6 +12,9 @@
 
 #include "SettingsGroup.h"
 
+
+class Fact;
+
 class UnitsSettings : public SettingsGroup
 {
     Q_OBJECT

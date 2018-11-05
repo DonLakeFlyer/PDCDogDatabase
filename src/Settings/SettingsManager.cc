@@ -14,17 +14,9 @@
 
 SettingsManager::SettingsManager(QGCApplication* app, QGCToolbox* toolbox)
     : QGCTool(app, toolbox)
-#if defined(QGC_AIRMAP_ENABLED)
-    , _airMapSettings       (NULL)
-#endif
     , _appSettings          (NULL)
     , _unitsSettings        (NULL)
-    , _autoConnectSettings  (NULL)
-    , _videoSettings        (NULL)
     , _flightMapSettings    (NULL)
-    , _rtkSettings          (NULL)
-    , _guidedSettings       (NULL)
-    , _brandImageSettings   (NULL)
 {
 
 }
@@ -37,13 +29,5 @@ void SettingsManager::setToolbox(QGCToolbox *toolbox)
 
     _unitsSettings =        new UnitsSettings(this);        // Must be first since AppSettings references it
     _appSettings =          new AppSettings(this);
-    _autoConnectSettings =  new AutoConnectSettings(this);
-    _videoSettings =        new VideoSettings(this);
     _flightMapSettings =    new FlightMapSettings(this);
-    _rtkSettings =          new RTKSettings(this);
-    _guidedSettings =       new GuidedSettings(this);
-    _brandImageSettings =   new BrandImageSettings(this);
-#if defined(QGC_AIRMAP_ENABLED)
-    _airMapSettings =       new AirMapSettings(this);
-#endif
 }

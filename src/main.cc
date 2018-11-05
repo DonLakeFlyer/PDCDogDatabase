@@ -28,12 +28,7 @@
 #include "AppMessages.h"
 
 #ifndef __mobile__
-    #include "QGCSerialPortInfo.h"
     #include "RunGuard.h"
-#endif
-
-#ifdef UNITTEST_BUILD
-    #include "UnitTest.h"
 #endif
 
 #ifdef QT_DEBUG
@@ -53,10 +48,6 @@
 /* SDL does ugly things to main() */
 #ifdef main
 #undef main
-#endif
-
-#ifndef __mobile__
-    Q_DECLARE_METATYPE(QGCSerialPortInfo)
 #endif
 
 #ifdef Q_OS_WIN
@@ -150,17 +141,11 @@ int main(int argc, char *argv[])
     // that we use these types in signals, and without calling qRegisterMetaType we can't queue
     // these signals. In general we don't queue these signals, but we do what the warning says
     // anyway to silence the debug output.
-#ifndef NO_SERIAL_LINK
-    qRegisterMetaType<QSerialPort::SerialPortError>();
-#endif
 #ifdef QGC_ENABLE_BLUETOOTH
     qRegisterMetaType<QBluetoothSocket::SocketError>();
     qRegisterMetaType<QBluetoothServiceInfo>();
 #endif
     qRegisterMetaType<QAbstractSocket::SocketError>();
-#ifndef __mobile__
-    qRegisterMetaType<QGCSerialPortInfo>();
-#endif
 
     // We statically link our own QtLocation plugin
 

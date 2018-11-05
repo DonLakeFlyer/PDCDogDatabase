@@ -18,8 +18,6 @@ import QGroundControl.FactSystem            1.0
 import QGroundControl.Controls              1.0
 import QGroundControl.FlightMap             1.0
 import QGroundControl.ScreenTools           1.0
-import QGroundControl.MultiVehicleManager   1.0
-import QGroundControl.Vehicle               1.0
 import QGroundControl.QGCPositionManager    1.0
 
 Map {
@@ -37,16 +35,10 @@ Map {
     property var    gcsPosition:                    QGroundControl.qgcPositionManger.gcsPosition
     property bool   userPanned:                     false   ///< true: the user has manually panned the map
     property bool   allowGCSLocationCenter:         false   ///< true: map will center/zoom to gcs location one time
-    property bool   allowVehicleLocationCenter:     false   ///< true: map will center/zoom to vehicle location one time
     property bool   firstGCSPositionReceived:       false   ///< true: first gcs position update was responded to
-    property bool   firstVehiclePositionReceived:   false   ///< true: first vehicle position update was responded to
-    property bool   planView:                       false   ///< true: map being using for Plan view, items should be draggable
     property var    qgcView
 
     readonly property real  maxZoomLevel: 20
-
-    property var    _activeVehicle:                 QGroundControl.multiVehicleManager.activeVehicle
-    property var    activeVehicleCoordinate:        _activeVehicle ? _activeVehicle.coordinate : QtPositioning.coordinate()
 
     function setVisibleRegion(region) {
         // TODO: Is this still necessary with Qt 5.11?
@@ -57,17 +49,8 @@ Map {
         _map.visibleRegion = region
     }
 
-    function _possiblyCenterToVehiclePosition() {
-        if (!firstVehiclePositionReceived && allowVehicleLocationCenter && activeVehicleCoordinate.isValid) {
-            firstVehiclePositionReceived = true
-            center = activeVehicleCoordinate
-            zoomLevel = QGroundControl.flightMapInitialZoom
-        }
-    }
-
     function centerToSpecifiedLocation() {
         qgcView.showDialog(specifyMapPositionDialog, qsTr("Specify Position"), qgcView.showDialogDefaultWidth, StandardButton.Close)
-
     }
 
     Component {
@@ -83,7 +66,7 @@ Map {
 
     // Center map to gcs location
     onGcsPositionChanged: {
-        if (gcsPosition.isValid && allowGCSLocationCenter && !firstGCSPositionReceived && !firstVehiclePositionReceived) {
+        if (gcsPosition.isValid && allowGCSLocationCenter && !firstGCSPositionReceived) {
             firstGCSPositionReceived = true
             center = gcsPosition
             zoomLevel = QGroundControl.flightMapInitialZoom
@@ -109,11 +92,8 @@ Map {
         }
     }
 
-    onActiveVehicleCoordinateChanged: _possiblyCenterToVehiclePosition()
-
     Component.onCompleted: {
         updateActiveMapType()
-        _possiblyCenterToVehiclePosition()
     }
 
     Connections {

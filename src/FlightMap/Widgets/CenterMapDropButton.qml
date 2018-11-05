@@ -35,8 +35,6 @@ DropButton {
     property bool   showFollowVehicle:    false
     property bool   followVehicle:        false
 
-    property var _activeVehicle: QGroundControl.multiVehicleManager.activeVehicle
-
     function fitHomePosition() {
         var homePosition = QtPositioning.coordinate()
         var activeVehicle = QGroundControl.multiVehicleManager.activeVehicle
@@ -164,51 +162,15 @@ DropButton {
             QGCLabel { text: qsTr("Center map on:") }
 
             QGCButton {
-                text:               qsTr("Mission")
-                Layout.fillWidth:   true
-                visible:            showMission
-                enabled:            !followVehicleCheckBox.checked
-
-                onClicked: {
-                    dropButton.hideDropDown()
-                    fitMapViewportToMissionItems()
-                }
-            }
-
-            QGCButton {
-                text:               qsTr("All items")
-                Layout.fillWidth:   true
-                visible:            showAllItems
-                enabled:            !followVehicleCheckBox.checked
-
-                onClicked: {
-                    dropButton.hideDropDown()
-                    fitMapViewportToAllItems()
-                }
-            }
-
-            QGCButton {
-                text:               qsTr("Home")
-                Layout.fillWidth:   true
-                enabled:            !followVehicleCheckBox.checked
-
-                onClicked: {
-                    dropButton.hideDropDown()
-                    map.center = fitHomePosition()
-                }
-            }
-
-            QGCButton {
                 text:               qsTr("Current Location")
                 Layout.fillWidth:   true
-                enabled:            map.gcsPosition ? map.gcsPosition.isValid && !followVehicleCheckBox.checked : false
+                enabled:            map.gcsPosition ? map.gcsPosition.isValid  : false
 
                 onClicked: {
                     dropButton.hideDropDown()
                     map.center = map.gcsPosition
                 }
             }
-
 
             QGCButton {
                 text:               qsTr("Specified Location")
@@ -217,29 +179,6 @@ DropButton {
                 onClicked: {
                     dropButton.hideDropDown()
                     map.centerToSpecifiedLocation()
-                }
-            }
-
-            QGCButton {
-                text:               qsTr("Vehicle")
-                Layout.fillWidth:   true
-                enabled:            _activeVehicle && _activeVehicle.latitude != 0 && _activeVehicle.longitude != 0 && !followVehicleCheckBox.checked
-
-                onClicked: {
-                    dropButton.hideDropDown()
-                    map.center = activeVehicle.coordinate
-                }
-            }
-
-            QGCCheckBox {
-                id:         followVehicleCheckBox
-                text:       qsTr("Follow Vehicle")
-                checked:    followVehicle
-                visible:    showFollowVehicle
-
-                onClicked:  {
-                    dropButton.hideDropDown()
-                    dropButton.followVehicle = checked
                 }
             }
         } // Column

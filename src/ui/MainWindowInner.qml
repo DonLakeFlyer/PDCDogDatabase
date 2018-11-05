@@ -18,7 +18,6 @@ import QGroundControl.Palette               1.0
 import QGroundControl.Controls              1.0
 import QGroundControl.FlightDisplay         1.0
 import QGroundControl.ScreenTools           1.0
-import QGroundControl.MultiVehicleManager   1.0
 
 /// Inner common QML for mainWindow
 Item {
@@ -30,8 +29,6 @@ Item {
 
     property var    currentPopUp:       null
     property real   currentCenterX:     0
-    property var    activeVehicle:      QGroundControl.multiVehicleManager.activeVehicle
-    property string formatedMessage:    activeVehicle ? activeVehicle.formatedMessage : ""
 
     property var _viewList: [ settingsViewLoader, setupViewLoader, planViewLoader, flightView, analyzeViewLoader ]
 
@@ -59,7 +56,6 @@ Item {
         for (var i=0; i<_viewList.length; i++) {
             _viewList[i].visible = false
         }
-        planToolBar.visible = false
     }
 
     function showSettingsView() {
@@ -106,7 +102,6 @@ Item {
         ScreenTools.availableHeight = parent.height - toolBar.height
         hideAllViews()
         planViewLoader.visible = true
-        planToolBar.visible = true
     }
 
     function showFlyView() {
@@ -138,11 +133,10 @@ Item {
 
     /// Start the process of closing QGroundControl. Prompts the user are needed.
     function attemptWindowClose() {
-        unsavedMissionCloseDialog.check()
+        finishCloseProcess()
     }
 
     function finishCloseProcess() {
-        QGroundControl.linkManager.shutdown()
         // The above shutdown causes a flurry of activity as the vehicle components are removed. This in turn
         // causes the Windows Version of Qt to crash if you allow the close event to be accepted. In order to prevent
         // the crash, we ignore the close event and setup a delayed timer to close the window after things settle down.
@@ -150,43 +144,6 @@ Item {
             delayedWindowCloseTimer.start()
         } else {
             mainWindow.reallyClose()
-        }
-    }
-
-    MessageDialog {
-        id:                 unsavedMissionCloseDialog
-        title:              qsTr("%1 close").arg(QGroundControl.appName)
-        text:               qsTr("You have a mission edit in progress which has not been saved/sent. If you close you will lose changes. Are you sure you want to close?")
-        standardButtons:    StandardButton.Yes | StandardButton.No
-        modality:           Qt.ApplicationModal
-        visible:            false
-
-        onYes: activeConnectionsCloseDialog.check()
-
-        function check() {
-            if (planViewLoader.item && planViewLoader.item.dirty) {
-                unsavedMissionCloseDialog.open()
-            } else {
-                activeConnectionsCloseDialog.check()
-            }
-        }
-    }
-
-    MessageDialog {
-        id:                 activeConnectionsCloseDialog
-        title:              qsTr("%1 close").arg(QGroundControl.appName)
-        text:               qsTr("There are still active connections to vehicles. Are you sure you want to exit?")
-        standardButtons:    StandardButton.Yes | StandardButton.Cancel
-        modality:           Qt.ApplicationModal
-        visible:            false
-        onYes:              finishCloseProcess()
-
-        function check() {
-            if (QGroundControl.multiVehicleManager.activeVehicle) {
-                activeConnectionsCloseDialog.open()
-            } else {
-                finishCloseProcess()
-            }
         }
     }
 
@@ -217,14 +174,6 @@ Item {
         message = message.replace(new RegExp("<#I>", "g"), "color: " + qgcPal.warningText + "; font: " + (ScreenTools.defaultFontPointSize.toFixed(0) - 1) + "pt monospace;");
         message = message.replace(new RegExp("<#N>", "g"), "color: " + qgcPal.text + "; font: " + (ScreenTools.defaultFontPointSize.toFixed(0) - 1) + "pt monospace;");
         return message;
-    }
-
-    onFormatedMessageChanged: {
-        if(messageArea.visible) {
-            messageText.append(formatMessage(formatedMessage))
-            //-- Hack to scroll down
-            messageFlick.flick(0,-500)
-        }
     }
 
     function showMessageArea() {
@@ -271,11 +220,10 @@ Item {
     MainToolBar {
         id:                 toolBar
         height:             ScreenTools.toolbarHeight
-        visible:            !QGroundControl.videoManager.fullScreen
         anchors.left:       parent.left
         anchors.right:      parent.right
         anchors.top:        parent.top
-        opacity:            planToolBar.visible ? 0 : 1
+        opacity:            1
         z:                  QGroundControl.zOrderTopMost
 
         Component.onCompleted:  ScreenTools.availableHeight = parent.height - toolBar.height
@@ -303,20 +251,6 @@ Item {
         }
     }
 
-    PlanToolBar {
-        id:                 planToolBar
-        height:             ScreenTools.toolbarHeight
-        anchors.left:       parent.left
-        anchors.right:      parent.right
-        anchors.top:        parent.top
-        z:                  toolBar.z + 1
-
-        onShowFlyView: {
-            planToolBar.visible = false
-            mainWindow.showFlyView()
-        }
-    }
-
     Loader {
         id:                 settingsViewLoader
         anchors.left:       parent.left
@@ -340,16 +274,12 @@ Item {
         anchors.top:        toolBar.bottom
         anchors.bottom:     parent.bottom
         visible:            false
-
-        property var planToolBar: planToolBar
     }
 
     Loader {
         id:                 planViewLoader
         anchors.fill:       parent
         visible:            false
-
-        property var toolbar: planToolBar
     }
 
     FlightDisplayView {

@@ -26,22 +26,10 @@
 #include <QStackedWidget>
 #include <QSettings>
 #include <QList>
-
-#include "LinkManager.h"
-#include "LinkInterface.h"
-#include "UASInterface.h"
-#include "LogCompressor.h"
-#include "QGCMAVLinkInspector.h"
-#include "QGCMAVLinkLogPlayer.h"
-#include "MAVLinkDecoder.h"
-#include "Vehicle.h"
-#include "QGCDockWidget.h"
-#include "QGCQmlWidgetHolder.h"
+#include <QTimer>
+#include <QVBoxLayout>
 
 #include "ui_MainWindow.h"
-
-class QGCStatusBar;
-class Linecharts;
 
 /**
  * @brief Main Application Window
@@ -64,16 +52,6 @@ public:
 
     ~MainWindow();
 
-
-    /** @brief Get low power mode setting */
-    bool lowPowerModeEnabled() const
-    {
-        return _lowPowerMode;
-    }
-
-    /// @brief Saves the last used connection
-    void saveLastUsedConnection(const QString connection);
-
     // Called from MainWindow.qml when the user accepts the window close dialog
     void _reallyClose(void);
 
@@ -81,34 +59,18 @@ public:
     QObject* rootQmlObject(void);
 
 public slots:
-    /** @brief Save power by reducing update rates */
-    void enableLowPowerMode(bool enabled) { _lowPowerMode = enabled; }
-
     void closeEvent(QCloseEvent* event);
 
     /** @brief Update the window name */
     void configureWindowName();
 
-protected slots:
-    /**
-     * @brief Enable/Disable Status Bar
-     */
-    void showStatusBarCallback(bool checked);
-
 signals:
-    void initStatusChanged(const QString& message, int alignment, const QColor &color);
     /** Emitted when any value changes from any source */
     void valueChanged(const int uasId, const QString& name, const QString& unit, const QVariant& value, const quint64 msec);
     void reallyClose(void);
 
     // Used for unit tests to know when the main window closes
     void mainWindowClosed(void);
-
-public:
-    QGCMAVLinkLogPlayer* getLogPlayer()
-    {
-        return logPlayer;
-    }
 
 protected:
     void connectCommonActions();
@@ -118,35 +80,17 @@ protected:
 
     QSettings settings;
 
-    QGCMAVLinkLogPlayer* logPlayer;
 #ifdef QGC_MOUSE_ENABLED_WIN
     /** @brief 3d Mouse support (WIN only) */
     Mouse3DInput* mouseInput;               ///< 3dConnexion 3dMouse SDK
     Mouse6dofInput* mouse;                  ///< Implementation for 3dMouse input
 #endif // QGC_MOUSE_ENABLED_WIN
 
-    /** User interface actions **/
-    QAction* connectUASAct;
-    QAction* disconnectUASAct;
-    QAction* startUASAct;
-    QAction* returnUASAct;
-    QAction* stopUASAct;
-    QAction* killUASAct;
-
-
-    LogCompressor* comp;
-    QTimer* videoTimer;
     QTimer windowNameUpdateTimer;
 
 private slots:
     void _closeWindow(void) { close(); }
-    void _vehicleAdded(Vehicle* vehicle);
-    void _showDockWidgetAction(bool show);
     void _showAdvancedUIChanged(bool advanced);
-
-#ifdef UNITTEST_BUILD
-    void _showQmlTestWidget(void);
-#endif
 
 private:
     /// Constructor is private since all creation should be through MainWindow::_create
@@ -154,26 +98,13 @@ private:
 
     void _openUrl(const QString& url, const QString& errorMessage);
 
-    QMap<QString, QGCDockWidget*>   _mapName2DockWidget;
     QMap<QString, QAction*>         _mapName2Action;
 
     void _storeCurrentViewState(void);
     void _loadCurrentViewState(void);
-    bool _createInnerDockWidget(const QString& widgetName);
-    void _buildCommonWidgets(void);
-    void _hideAllDockWidgets(void);
-    void _showDockWidget(const QString &name, bool show);
-    void _loadVisibleWidgetsSettings(void);
-    void _storeVisibleWidgetsSettings(void);
-    MAVLinkDecoder* _mavLinkDecoderInstance(void);
 
-    MAVLinkDecoder*         _mavlinkDecoder;
-    bool                    _lowPowerMode;           ///< If enabled, QGC reduces the update rates of all widgets
-    bool                    _showStatusBar;
     QVBoxLayout*            _centralLayout;
     Ui::MainWindow          _ui;
-
-    QGCQmlWidgetHolder*     _mainQmlWidgetHolder;
 
     bool    _forceClose;
 

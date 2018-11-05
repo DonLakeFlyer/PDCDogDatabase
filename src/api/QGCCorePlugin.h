@@ -11,7 +11,6 @@
 
 #include "QGCToolbox.h"
 #include "QGCPalette.h"
-#include "QGCMAVLink.h"
 #include "QmlObjectListModel.h"
 
 #include <QObject>
@@ -28,11 +27,7 @@ class QGCCorePlugin_p;
 class FactMetaData;
 class QGeoPositionInfoSource;
 class QQmlApplicationEngine;
-class Vehicle;
-class LinkInterface;
 class QmlObjectListModel;
-class VideoReceiver;
-class PlanMasterController;
 
 class QGCCorePlugin : public QGCTool
 {
@@ -48,11 +43,7 @@ public:
     Q_PROPERTY(bool                 showTouchAreas          READ showTouchAreas         WRITE setShowTouchAreas NOTIFY showTouchAreasChanged)
     Q_PROPERTY(bool                 showAdvancedUI          READ showAdvancedUI         WRITE setShowAdvancedUI NOTIFY showAdvancedUIChanged)
     Q_PROPERTY(QString              showAdvancedUIMessage   READ showAdvancedUIMessage                          CONSTANT)
-    Q_PROPERTY(QString              brandImageIndoor        READ brandImageIndoor                               CONSTANT)
-    Q_PROPERTY(QString              brandImageOutdoor       READ brandImageOutdoor                              CONSTANT)
     Q_PROPERTY(QmlObjectListModel*  customMapItems          READ customMapItems                                 CONSTANT)
-
-    Q_INVOKABLE bool guidedActionsControllerLogging(void) const;
 
     /// The list of settings under the Settings Menu
     /// @return A list of QGCSettings
@@ -102,30 +93,9 @@ public:
     /// Allows the plugin to override the creation of the root (native) window.
     virtual QQmlApplicationEngine* createRootWindow(QObject* parent);
 
-    /// Allows the plugin to override the creation of VideoReceiver.
-    virtual VideoReceiver* createVideoReceiver(QObject* parent);
-
-    /// Allows the plugin to see all mavlink traffic to a vehicle
-    /// @return true: Allow vehicle to continue processing, false: Vehicle should not process message
-    virtual bool mavlinkMessage(Vehicle* vehicle, LinkInterface* link, mavlink_message_t message);
-
     /// Allows custom builds to add custom items to the FlightMap. Objects put into QmlObjectListModel
     /// should derive from QmlComponentInfo and set the url property.
     virtual QmlObjectListModel* customMapItems(void);
-
-    /// Allows custom builds to add custom items to the plan file. Either before the document is
-    /// created or after.
-    virtual void    preSaveToJson           (PlanMasterController* pController, QJsonObject& json) { Q_UNUSED(pController); Q_UNUSED(json); }
-    virtual void    postSaveToJson          (PlanMasterController* pController, QJsonObject& json) { Q_UNUSED(pController); Q_UNUSED(json); }
-
-    /// Same for the specific "mission" portion
-    virtual void    preSaveToMissionJson    (PlanMasterController* pController, QJsonObject& missionJson) { Q_UNUSED(pController); Q_UNUSED(missionJson); }
-    virtual void    postSaveToMissionJson   (PlanMasterController* pController, QJsonObject& missionJson) { Q_UNUSED(pController); Q_UNUSED(missionJson); }
-
-    /// Allows custom builds to load custom items from the plan file. Either before the document is
-    /// parsed or after.
-    virtual void    preLoadFromJson     (PlanMasterController* pController, QJsonObject& json) { Q_UNUSED(pController); Q_UNUSED(json); }
-    virtual void    postLoadFromJson    (PlanMasterController* pController, QJsonObject& json) { Q_UNUSED(pController); Q_UNUSED(json); }
 
     /// Returns the url to download the stable version check file. Return QString() to indicate no version check should be performed.
     /// Default QGC mainline implemenentation returns QGC Stable file location. Default QGC custom build code returns QString().
