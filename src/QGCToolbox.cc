@@ -15,6 +15,7 @@
 #include "QGCOptions.h"
 #include "SettingsManager.h"
 #include "QGCApplication.h"
+#include "PDCDatabase.h"
 
 #if defined(QGC_CUSTOM_BUILD)
 #include CUSTOMHEADER
@@ -27,16 +28,18 @@ QGCToolbox::QGCToolbox(QGCApplication* app)
     , _qgcPositionManager   (NULL)
     , _corePlugin           (NULL)
     , _settingsManager      (NULL)
+    , _pdcDatabase          (NULL)
 {
     // SettingsManager must be first so settings are available to any subsequent tools
     _settingsManager =          new SettingsManager(app, this);
 
     //-- Scan and load plugins
     _scanAndLoadPlugins(app);
-    _factSystem =               new FactSystem              (app, this);
-    _imageProvider =            new QGCImageProvider        (app, this);
-    _mapEngineManager =         new QGCMapEngineManager     (app, this);
-    _qgcPositionManager =       new QGCPositionManager      (app, this);
+    _factSystem =           new FactSystem          (app, this);
+    _imageProvider =        new QGCImageProvider    (app, this);
+    _mapEngineManager =     new QGCMapEngineManager (app, this);
+    _qgcPositionManager =   new QGCPositionManager  (app, this);
+    _pdcDatabase =          new PDCDatabase         (app, this);
 }
 
 void QGCToolbox::setChildToolboxes(void)
@@ -49,6 +52,7 @@ void QGCToolbox::setChildToolboxes(void)
     _imageProvider->setToolbox(this);
     _mapEngineManager->setToolbox(this);
     _qgcPositionManager->setToolbox(this);
+    _pdcDatabase->setToolbox(this);
 }
 
 void QGCToolbox::_scanAndLoadPlugins(QGCApplication* app)

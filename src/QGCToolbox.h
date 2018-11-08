@@ -20,6 +20,7 @@ class QGCImageProvider;
 class QGCPositionManager;
 class QGCCorePlugin;
 class SettingsManager;
+class PDCDatabase;
 
 /// This is used to manage all of our top level services/tools
 class QGCToolbox : public QObject {
@@ -28,22 +29,25 @@ class QGCToolbox : public QObject {
 public:
     QGCToolbox(QGCApplication* app);
 
-    QGCMapEngineManager*        mapEngineManager(void)          { return _mapEngineManager; }
-    QGCImageProvider*           imageProvider()                 { return _imageProvider; }
-    QGCPositionManager*         qgcPositionManager(void)        { return _qgcPositionManager; }
-    QGCCorePlugin*              corePlugin(void)                { return _corePlugin; }
-    SettingsManager*            settingsManager(void)           { return _settingsManager; }
+    QGCMapEngineManager*    mapEngineManager(void)      { return _mapEngineManager; }
+    QGCImageProvider*       imageProvider()             { return _imageProvider; }
+    QGCPositionManager*     qgcPositionManager(void)    { return _qgcPositionManager; }
+    QGCCorePlugin*          corePlugin(void)            { return _corePlugin; }
+    SettingsManager*        settingsManager(void)       { return _settingsManager; }
+    PDCDatabase*            pdcDatabase(void)           { return _pdcDatabase; }
 
 private:
     void setChildToolboxes(void);
     void _scanAndLoadPlugins(QGCApplication *app);
 
-    FactSystem*                 _factSystem;
-    QGCImageProvider*           _imageProvider;
-    QGCMapEngineManager*        _mapEngineManager;
-    QGCPositionManager*         _qgcPositionManager;
-    QGCCorePlugin*              _corePlugin;
-    SettingsManager*            _settingsManager;
+    FactSystem*             _factSystem;
+    QGCImageProvider*       _imageProvider;
+    QGCMapEngineManager*    _mapEngineManager;
+    QGCPositionManager*     _qgcPositionManager;
+    QGCCorePlugin*          _corePlugin;
+    SettingsManager*        _settingsManager;
+    PDCDatabase*            _pdcDatabase;
+
     friend class QGCApplication;
 };
 

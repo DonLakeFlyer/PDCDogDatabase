@@ -33,6 +33,7 @@ QGroundControlQmlGlobal::QGroundControlQmlGlobal(QGCApplication* app, QGCToolbox
     , _qgcPositionManager   (NULL)
     , _corePlugin           (NULL)
     , _settingsManager      (NULL)
+    , _pdcDatabase          (NULL)
 {
     // We clear the parent on this object since we run into shutdown problems caused by hybrid qml app. Instead we let it leak on shutdown.
     setParent(NULL);
@@ -62,6 +63,7 @@ void QGroundControlQmlGlobal::setToolbox(QGCToolbox* toolbox)
     _qgcPositionManager     = toolbox->qgcPositionManager();
     _corePlugin             = toolbox->corePlugin();
     _settingsManager        = toolbox->settingsManager();
+    _pdcDatabase            = toolbox->pdcDatabase();
 }
 
 void QGroundControlQmlGlobal::saveGlobalSetting (const QString& key, const QString& value)

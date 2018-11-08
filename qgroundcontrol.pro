@@ -338,6 +338,7 @@ INCLUDEPATH += \
     include/ui \
     src \
     src/api \
+    src/PDC \
     src/PositionManager \
     src/QmlControls \
     src/QtLocationPlugin \
@@ -374,6 +375,7 @@ HEADERS += \
     src/CmdLineOptParser.h \
     src/JsonHelper.h \
     src/MG.h \
+    src/PDC/PDCDatabase.h \
     src/PositionManager/PositionManager.h \
     src/PositionManager/SimulatedPosition.h \
     src/QGC.h \
@@ -433,6 +435,7 @@ AndroidBuild {
 SOURCES += \
     src/CmdLineOptParser.cc \
     src/JsonHelper.cc \
+    src/PDC/PDCDatabase.cc \
     src/PositionManager/PositionManager.cpp \
     src/PositionManager/SimulatedPosition.cc \
     src/QGC.cc \
