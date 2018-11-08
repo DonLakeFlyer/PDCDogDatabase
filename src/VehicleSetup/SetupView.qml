@@ -16,10 +16,82 @@ import QGroundControl.Palette               1.0
 import QGroundControl.Controls              1.0
 import QGroundControl.ScreenTools           1.0
 
-Rectangle {
-    id:     setupView
-    color:  qgcPal.window
-    z:      QGroundControl.zOrderTopMost
+QGCView {
+    id:         _qgcView
+    viewPanel:  panel
+    z:          QGroundControl.zOrderTopMost
 
-    QGCPalette { id: qgcPal; colorGroupEnabled: true }
+    readonly property real _defaultTextHeight: ScreenTools.defaultFontPixelHeight
+    readonly property real _defaultTextWidth:  ScreenTools.defaultFontPixelWidth
+    readonly property real _margins:            _defaultTextWidth / 2
+    readonly property real _buttonWidth:       _defaultTextWidth * 18
+
+    QGCPalette { id: qgcPal; colorGroupEnabled: enabled }
+
+    ExclusiveGroup { id: setupButtonGroup }
+
+    QGCViewPanel {
+        id:             panel
+        anchors.fill:   parent
+
+        QGCFlickable {
+            id:                 buttonScroll
+            anchors.margins:    _margins
+            anchors.left:       parent.left
+            anchors.top:        parent.top
+            anchors.bottom:     parent.bottom
+            width:              buttonColumn.width
+            contentHeight:      buttonColumn.height
+            flickableDirection: Flickable.VerticalFlick
+            clip:               true
+
+            ColumnLayout {
+                id:         buttonColumn
+                spacing:    _defaultTextHeight / 2
+
+                SubMenuButton {
+                    id:                 packButton
+                    imageResource:      "/qmlimages/VehicleSummaryIcon.png"
+                    setupIndicator:     false
+                    checked:            true
+                    exclusiveGroup:     setupButtonGroup
+                    text:               qsTr("Packs")
+                    Layout.fillWidth:   true
+
+                    onClicked: showSummaryPanel()
+                }
+
+                SubMenuButton {
+                    id:                 dogButton
+                    imageResource:      "/qmlimages/FirmwareUpgradeIcon.png"
+                    setupIndicator:     false
+                    exclusiveGroup:     setupButtonGroup
+                    text:               qsTr("Dogs")
+                    Layout.fillWidth:   true
+
+                    onClicked: showFirmwarePanel()
+                }
+
+                SubMenuButton {
+                    id:                 photoButton
+                    exclusiveGroup:     setupButtonGroup
+                    setupIndicator:     false
+                    text:               qsTr("Photos")
+                    Layout.fillWidth:   true
+
+                    onClicked:      showPX4FlowPanel()
+                }
+            }
+        }
+
+        Loader {
+            id:                 panelLoader
+            anchors.margins:    _margins
+            anchors.left:       buttonScroll.right
+            anchors.right:      parent.right
+            anchors.top:        parent.top
+            anchors.bottom:     parent.bottom
+            source:             "qrc:/PDC/PackEditor.qml"
+        }
+    }
 }

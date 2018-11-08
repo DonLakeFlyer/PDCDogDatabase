@@ -1,4 +1,7 @@
 <RCC>
+    <qresource prefix="/PDC">
+        <file alias="PackEditor.qml">src/PDC/PackEditor.qml</file>
+    </qresource>
     <qresource prefix="/qml">
         <file alias="QGroundControl/Controls/EditPositionDialog.qml">src/QmlControls/EditPositionDialog.qml</file>
         <file alias="QGroundControl/Controls/FileButton.qml">src/QmlControls/FileButton.qml</file>

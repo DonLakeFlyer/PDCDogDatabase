@@ -17,7 +17,7 @@
 #include <QtQml>
 
 PDCDatabase::PDCDatabase(QGCApplication *app, QGCToolbox* toolbox)
-    : QGCTool   (app, toolbox)
+    : QGCTool(app, toolbox)
 {
     _db = QSqlDatabase::addDatabase("QSQLITE");
     _db.setDatabaseName("PDC.db");
@@ -36,6 +36,8 @@ PDCDatabase::PDCDatabase(QGCApplication *app, QGCToolbox* toolbox)
        QString name = query.value(idName).toString();
        qDebug() << name;
     }
+
+    _packModel = new PackModel(this);
 }
 
 PDCDatabase::~PDCDatabase()

@@ -10,6 +10,7 @@
 #pragma once
 
 #include "QGCToolbox.h"
+#include "PackModel.h"
 
 #include <QSqlDatabase>
 #include <QSqlQueryModel>
@@ -22,14 +23,14 @@ public:
     PDCDatabase(QGCApplication* app, QGCToolbox* toolbox);
     ~PDCDatabase();
 
-    Q_PROPERTY(QAbstractTableModel* packsModel READ packsModel CONSTANT)
+    Q_PROPERTY(PackModel* packModel READ packModel CONSTANT)
 
-    QSqlQueryModel* packsModel(void) { return _packsModel; }
+    PackModel* packModel(void) { return _packModel; }
 
     // Override from QGCTool
     virtual void setToolbox(QGCToolbox* toolbox);
 
 private:
     QSqlDatabase    _db;
-    QSqlQueryModel* _packsModel;
+    PackModel*      _packModel;
 };

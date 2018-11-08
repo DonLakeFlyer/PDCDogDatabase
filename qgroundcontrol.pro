@@ -375,6 +375,7 @@ HEADERS += \
     src/CmdLineOptParser.h \
     src/JsonHelper.h \
     src/MG.h \
+    src/PDC/PackModel.h \
     src/PDC/PDCDatabase.h \
     src/PositionManager/PositionManager.h \
     src/PositionManager/SimulatedPosition.h \
@@ -435,6 +436,7 @@ AndroidBuild {
 SOURCES += \
     src/CmdLineOptParser.cc \
     src/JsonHelper.cc \
+    src/PDC/PackModel.cc \
     src/PDC/PDCDatabase.cc \
     src/PositionManager/PositionManager.cpp \
     src/PositionManager/SimulatedPosition.cc \
@@ -525,3 +527,6 @@ contains (CONFIG, QGC_DISABLE_BUILD_SETUP) {
 #
 
 include(QGCInstaller.pri)
+
+DISTFILES += \
+    src/PDC/PackEditor.qml
