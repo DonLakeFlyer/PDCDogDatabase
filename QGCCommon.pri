@@ -16,8 +16,6 @@
 # to allow us to easily modify suported build types in one place instead of duplicated throughout
 # the project file.
 
-CONFIG += MobileBuild
-
 linux {
     linux-g++ | linux-g++-64 | linux-g++-32 | linux-clang {
         message("Linux build")

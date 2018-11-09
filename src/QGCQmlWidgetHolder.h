@@ -7,14 +7,7 @@
  *
  ****************************************************************************/
 
-
-#ifndef QGCQmlWidgetHolder_h
-#define QGCQmlWidgetHolder_h
-
-/// @file
-///     @author Don Gagne <don@thegagnes.com>
-
-#include "QGCDockWidget.h"
+#pragma once
 
 #include "ui_QGCQmlWidgetHolder.h"
 
@@ -24,7 +17,7 @@ class QGCQmlWidgetHolder;
 
 /// This is used to create widgets which are implemented in QML.
 
-class QGCQmlWidgetHolder : public QGCDockWidget
+class QGCQmlWidgetHolder : public QWidget
 {
     Q_OBJECT
 
@@ -33,7 +26,7 @@ public:
     // control as a normal QWidget, not a doc widget just pass in:
     //      title = QString()
     //      action = NULL
-    explicit QGCQmlWidgetHolder(const QString& title, QAction* action, QWidget *parent = 0);
+    explicit QGCQmlWidgetHolder(const QString& title, QAction* action, QWidget *parent = Q_NULLPTR);
     ~QGCQmlWidgetHolder();
 
     /// Get Root Context
@@ -57,5 +50,3 @@ public:
 private:
     Ui::QGCQmlWidgetHolder _ui;
 };
-
-#endif

@@ -17,12 +17,15 @@ const int PackModel::ObjectRole = Qt::UserRole;
 const int PackModel::TextRole = Qt::UserRole + 1;
 
 PackModel::PackModel(QObject* parent)
-    : QSqlQueryModel(parent)
+    : QSqlTableModel(parent)
 {
     QQmlEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
     qmlRegisterUncreatableType<PackModel>("QGroundControl.PDCDatabase", 1, 0, "PackModel", "Reference only");
 
-    setQuery("SELECT * FROM Packs");
+    setTable("Packs");
+    setEditStrategy(QSqlTableModel::OnManualSubmit);
+    select();
+    setHeaderData(0, Qt::Horizontal, tr("Name"));
 }
 
 PackModel::~PackModel()
@@ -58,14 +61,22 @@ QVariant PackModel::data(const QModelIndex &index, int role) const
 
 QString PackModel::addPack(QString name)
 {
-    QSqlQuery query;
+    QSqlRecord newRecord = record();
+    newRecord.setValue("Name", name);
 
-    if (!query.exec(QString("INSERT INTO Packs VALUES (\"%1\")").arg(name))) {
-        return query.lastError().databaseText();
+    if (!insertRecord(rowCount(), newRecord)) {
+        return "Add failed";
     }
 
-    clear();
-    setQuery("SELECT * FROM Packs");
+    submitAll();
 
     return QString();
+}
+
+void PackModel::deletePack(int index)
+{
+    if (!removeRows(index, 1)) {
+        qDebug() << "removeRows failed";
+    }
+    submitAll();
 }

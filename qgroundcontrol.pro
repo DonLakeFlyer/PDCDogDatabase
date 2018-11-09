@@ -351,7 +351,8 @@ INCLUDEPATH += \
     src/ui/toolbar
 
 FORMS += \
-    src/ui/MainWindow.ui
+    src/ui/MainWindow.ui \
+    src/QGCQmlWidgetHolder.ui \
 
 #
 # Plugin API
@@ -389,6 +390,7 @@ HEADERS += \
     src/QGCMapPalette.h \
     src/QGCPalette.h \
     src/QGCQGeoCoordinate.h \
+    src/QGCQmlWidgetHolder.h \
     src/QGCQuickWidget.h \
     src/QGCTemporaryFile.h \
     src/QGCToolbox.h \
@@ -449,6 +451,7 @@ SOURCES += \
     src/QGCMapPalette.cc \
     src/QGCPalette.cc \
     src/QGCQGeoCoordinate.cc \
+    src/QGCQmlWidgetHolder.cpp \
     src/QGCQuickWidget.cc \
     src/QGCTemporaryFile.cc \
     src/QGCToolbox.cc \
@@ -473,7 +476,8 @@ SOURCES += \
 !MobileBuild {
 SOURCES += \
     src/RunGuard.cc \
-    src/ui/MainWindow.cc
+    src/ui/MainWindow.cc \
+    src/QGCQFileDialog.cc
 }
 
 # Fact System code

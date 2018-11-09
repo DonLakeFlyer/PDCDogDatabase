@@ -126,8 +126,6 @@ MainWindow::MainWindow()
     // Create actions
     connectCommonActions();
 
-#ifndef __mobile__
-
     // Restore the window position and size
     if (settings.contains(_getWindowGeometryKey()))
     {
@@ -150,7 +148,6 @@ MainWindow::MainWindow()
             move((scrSize.width() - w) / 2, (scrSize.height() - h) / 2);
         }
     }
-#endif
 
     connect(&windowNameUpdateTimer, &QTimer::timeout, this, &MainWindow::configureWindowName);
     windowNameUpdateTimer.start(15000);

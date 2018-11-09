@@ -7,24 +7,17 @@
  *
  ****************************************************************************/
 
-
-/// @file
-///     @author Don Gagne <don@thegagnes.com>
-
 #include "QGCQmlWidgetHolder.h"
 
 #include <QQmlContext>
+#include <QQmlError>
 
 QGCQmlWidgetHolder::QGCQmlWidgetHolder(const QString& title, QAction* action, QWidget *parent) :
-    QGCDockWidget(title, action, parent)
+    QWidget(parent)
 {
     _ui.setupUi(this);
 
     layout()->setContentsMargins(0,0,0,0);
-
-    if (action) {
-        setWindowTitle(title);
-    }
     setResizeMode(QQuickWidget::SizeRootObjectToView);
 }
 
@@ -32,10 +25,13 @@ QGCQmlWidgetHolder::~QGCQmlWidgetHolder()
 {
 
 }
-
 bool QGCQmlWidgetHolder::setSource(const QUrl& qmlUrl)
 {
-    return _ui.qmlWidget->setSource(qmlUrl);
+    bool success = _ui.qmlWidget->setSource(qmlUrl);
+    for (QQmlError error: _ui.qmlWidget->errors()) {
+        qDebug() << "Error" << error.toString();
+    }
+    return success;
 }
 
 void QGCQmlWidgetHolder::setContextPropertyObject(const QString& name, QObject* object)

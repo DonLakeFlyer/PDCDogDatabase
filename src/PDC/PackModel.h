@@ -11,7 +11,7 @@
 
 #include <QtSql>
 
-class PackModel : public QSqlQueryModel
+class PackModel : public QSqlTableModel
 {
     Q_OBJECT
 
@@ -20,6 +20,7 @@ public:
     ~PackModel();
 
     Q_INVOKABLE QString addPack(QString name);
+    Q_INVOKABLE void deletePack(int index);
 
     // Overrides from QSqlQueryModel
     QHash<int, QByteArray> roleNames() const override;

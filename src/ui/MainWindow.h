@@ -29,6 +29,8 @@
 #include <QTimer>
 #include <QVBoxLayout>
 
+#include "QGCQmlWidgetHolder.h"
+
 #include "ui_MainWindow.h"
 
 /**
@@ -105,6 +107,8 @@ private:
 
     QVBoxLayout*            _centralLayout;
     Ui::MainWindow          _ui;
+
+    QGCQmlWidgetHolder*     _mainQmlWidgetHolder;
 
     bool    _forceClose;
 

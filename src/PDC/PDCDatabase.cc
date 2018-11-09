@@ -24,19 +24,6 @@ PDCDatabase::PDCDatabase(QGCApplication *app, QGCToolbox* toolbox)
     if (!_db.open()) {
         qWarning() << "Open failed" << _db.lastError().driverText() << _db.lastError().databaseText();
     }
-
-    for (const QString& table: _db.tables()) {
-        qDebug() << table;
-    }
-
-    QSqlQuery query("SELECT * FROM Packs");
-    int idName = query.record().indexOf("Name");
-    while (query.next())
-    {
-       QString name = query.value(idName).toString();
-       qDebug() << name;
-    }
-
     _packModel = new PackModel(this);
 }
 

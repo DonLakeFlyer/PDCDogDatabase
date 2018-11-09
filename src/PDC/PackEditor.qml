@@ -17,20 +17,21 @@ Rectangle {
 
     QGCPalette { id: qgcPal; colorGroupEnabled: enabled }
 
-    RowLayout {
+    Row {
         anchors.fill: parent
 
-        QGCListView {
-            id:     list
-            width:  ScreenTools.defaultFontPixelWidth * 20
+        TableView {
+            id:     packTable
             model:  _packModel
 
-            delegate: QGCLabel {
-                text: name
+            TableViewColumn {
+                role: "name"
+                title: "Name"
+                width: 100
             }
         }
 
-        ColumnLayout {
+        Column {
             spacing: ScreenTools.defaultFontPixelHeight
 
             QGCButton {
@@ -40,6 +41,7 @@ Rectangle {
 
             QGCButton {
                 text: "Delete"
+                onClicked: _packModel.deletePack(packTable.currentRow)
             }
         }
     }
